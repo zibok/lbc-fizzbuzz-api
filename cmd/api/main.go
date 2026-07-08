@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"log/slog"
 	"net/http"
 	"os"
@@ -16,8 +17,13 @@ import (
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	cfg := httpapi.Config{
-		Addr: ":8080",
+	configPath := flag.String("config", "config.json", "path to the JSON configuration file")
+	flag.Parse()
+
+	cfg, err := loadConfig(*configPath)
+	if err != nil {
+		logger.Error("load config failed", slog.Any("error", err))
+		os.Exit(1)
 	}
 
 	server := &http.Server{

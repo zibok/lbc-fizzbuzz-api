@@ -8,6 +8,8 @@ import (
 )
 
 func NewRouter(cfg Config, logger *slog.Logger) http.Handler {
+	cfg = cfg.WithDefaults()
+
 	if logger == nil {
 		logger = slog.Default()
 	}

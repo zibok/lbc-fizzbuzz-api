@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -42,8 +43,8 @@ func (api API) fizzbuzz(w http.ResponseWriter, r *http.Request) {
 
 	if limitQueryParam := r.URL.Query().Get("limit"); limitQueryParam != "" {
 		parsed, err := strconv.Atoi(limitQueryParam)
-		if err != nil || parsed < 1 || parsed > 10000 {
-			writeJSON(w, http.StatusBadRequest, errorResponse{Error: "limit must be an integer between 1 and 10000"})
+		if err != nil || parsed < 1 || parsed > api.config.MaxLimit {
+			writeJSON(w, http.StatusBadRequest, errorResponse{Error: fmt.Sprintf("limit must be an integer between 1 and %d", api.config.MaxLimit)})
 			return
 		}
 		config.Limit = parsed

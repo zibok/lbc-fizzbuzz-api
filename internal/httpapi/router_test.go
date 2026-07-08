@@ -75,6 +75,30 @@ func TestFizzBuzzWithCustomWords(t *testing.T) {
 	}
 }
 
+func TestFizzBuzzUsesConfiguredMaxLimit(t *testing.T) {
+	server := httptest.NewServer(NewRouter(Config{MaxLimit: 3}, slog.New(slog.NewTextHandler(io.Discard, nil))))
+	defer server.Close()
+
+	res, err := http.Get(server.URL + "/v1/fizzbuzz?limit=4")
+	if err != nil {
+		t.Fatalf("GET /v1/fizzbuzz failed: %v", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", res.StatusCode, http.StatusBadRequest)
+	}
+
+	var body errorResponse
+	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	if body.Error != "limit must be an integer between 1 and 3" {
+		t.Fatalf("error = %q, want configured max limit message", body.Error)
+	}
+}
+
 func TestFizzBuzzRejectsInvalidLimit(t *testing.T) {
 	server := httptest.NewServer(NewRouter(Config{}, slog.New(slog.NewTextHandler(io.Discard, nil))))
 	defer server.Close()
