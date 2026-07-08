@@ -11,8 +11,9 @@ import (
 )
 
 type API struct {
-	config Config
-	logger *slog.Logger
+	config             Config
+	logger             *slog.Logger
+	statisticsRecorder StatisticsRecorder
 }
 
 type healthResponse struct {
@@ -22,6 +23,19 @@ type healthResponse struct {
 type fizzbuzzResponse struct {
 	Limit  int      `json:"limit"`
 	Values []string `json:"values"`
+}
+
+type statisticsRequestResponse struct {
+	Limit        int    `json:"limit"`
+	FirstModulo  int    `json:"firstModulo"`
+	SecondModulo int    `json:"secondModulo"`
+	FirstWord    string `json:"firstWord"`
+	SecondWord   string `json:"secondWord"`
+}
+
+type statisticsResponse struct {
+	Request *statisticsRequestResponse `json:"request"`
+	Hits    int                        `json:"hits"`
 }
 
 type errorResponse struct {
@@ -76,6 +90,8 @@ func (api API) fizzbuzz(w http.ResponseWriter, r *http.Request) {
 		config.SecondWord = secondWordQueryParam
 	}
 
+	api.statisticsRecorder.Record(config)
+
 	writeJSON(w, http.StatusOK, fizzbuzzResponse{
 		Limit:  config.Limit,
 		Values: fizzbuzz.Generate(config),
@@ -86,4 +102,23 @@ func writeJSON(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(body)
+}
+
+func (api API) statistics(w http.ResponseWriter, r *http.Request) {
+	config, hits, found := api.statisticsRecorder.MostFrequent()
+	if !found {
+		writeJSON(w, http.StatusOK, statisticsResponse{Hits: 0})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, statisticsResponse{
+		Request: &statisticsRequestResponse{
+			Limit:        config.Limit,
+			FirstModulo:  config.FirstModulo,
+			SecondModulo: config.SecondModulo,
+			FirstWord:    config.FirstWord,
+			SecondWord:   config.SecondWord,
+		},
+		Hits: hits,
+	})
 }

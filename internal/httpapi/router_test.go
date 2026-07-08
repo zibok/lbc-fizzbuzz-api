@@ -75,6 +75,68 @@ func TestFizzBuzzWithCustomWords(t *testing.T) {
 	}
 }
 
+func TestStatisticsReturnsMostFrequentFizzBuzzRequest(t *testing.T) {
+	server := httptest.NewServer(NewRouter(Config{}, slog.New(slog.NewTextHandler(io.Discard, nil))))
+	defer server.Close()
+
+	requests := []string{
+		"/v1/fizzbuzz?limit=5",
+		"/v1/fizzbuzz?limit=6&firstModulo=2&secondModulo=3&firstWord=Foo&secondWord=Bar",
+		"/v1/fizzbuzz?limit=6&firstModulo=2&secondModulo=3&firstWord=Foo&secondWord=Bar",
+	}
+
+	for _, path := range requests {
+		res, err := http.Get(server.URL + path)
+		if err != nil {
+			t.Fatalf("GET %s failed: %v", path, err)
+		}
+		res.Body.Close()
+	}
+
+	res, err := http.Get(server.URL + "/v1/statistics")
+	if err != nil {
+		t.Fatalf("GET /v1/statistics failed: %v", err)
+	}
+	defer res.Body.Close()
+
+	var body statisticsResponse
+	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	if body.Hits != 2 {
+		t.Fatalf("hits = %d, want 2", body.Hits)
+	}
+
+	if body.Request.Limit != 6 || body.Request.FirstModulo != 2 || body.Request.SecondModulo != 3 || body.Request.FirstWord != "Foo" || body.Request.SecondWord != "Bar" {
+		t.Fatalf("request = %#v, want custom FooBar request", body.Request)
+	}
+}
+
+func TestStatisticsReturnsZeroHitsWhenNoFizzBuzzRequestWasRecorded(t *testing.T) {
+	server := httptest.NewServer(NewRouter(Config{}, slog.New(slog.NewTextHandler(io.Discard, nil))))
+	defer server.Close()
+
+	res, err := http.Get(server.URL + "/v1/statistics")
+	if err != nil {
+		t.Fatalf("GET /v1/statistics failed: %v", err)
+	}
+	defer res.Body.Close()
+
+	var body statisticsResponse
+	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	if body.Hits != 0 {
+		t.Fatalf("hits = %d, want 0", body.Hits)
+	}
+
+	if body.Request != nil {
+		t.Fatalf("request = %#v, want nil", body.Request)
+	}
+}
+
 func TestFizzBuzzUsesConfiguredMaxLimit(t *testing.T) {
 	server := httptest.NewServer(NewRouter(Config{MaxLimit: 3}, slog.New(slog.NewTextHandler(io.Discard, nil))))
 	defer server.Close()

@@ -83,6 +83,48 @@ Invalid query parameters return `400 Bad Request`:
 {"error":"limit must be an integer between 1 and 10000"}
 ```
 
+### `GET /v1/statistics`
+
+Returns the most frequently used valid `/v1/fizzbuzz` request parameters and the number of hits for that request.
+
+This endpoint accepts no query parameter.
+
+Response when requests have been recorded:
+
+```json
+{
+  "request": {
+    "limit": 6,
+    "firstModulo": 2,
+    "secondModulo": 3,
+    "firstWord": "Foo",
+    "secondWord": "Bar"
+  },
+  "hits": 2
+}
+```
+
+Response when no valid `/v1/fizzbuzz` request has been recorded yet:
+
+```json
+{
+  "request": {
+    "limit": 0,
+    "firstModulo": 0,
+    "secondModulo": 0,
+    "firstWord": "",
+    "secondWord": ""
+  },
+  "hits": 0
+}
+```
+
+Example:
+
+```sh
+curl "http://localhost:8080/v1/statistics"
+```
+
 ### `GET /metrics`
 
 Exposes Prometheus metrics for the API.
