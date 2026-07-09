@@ -30,6 +30,19 @@ go run ./cmd/api -config config.example.json
 
 The server listens on the configured `addr` value.
 
+## Run via docker
+
+```sh
+docker pull ghcr.io/zibok/lbc-fizzbuzz-api:main
+docker run -p8080:8080 ghcr.io/zibok/lbc-fizzbuzz-api:main
+```
+
+You can mount a configuration file if needed and pass it in the `-config` parameter
+
+```sh
+docker run -p8080:8080 -v /path/to/config.json:/config.json ghcr.io/zibok/lbc-fizzbuzz-api:main -config /config.json
+```
+
 ## Endpoints
 
 ### `GET /healthz`
