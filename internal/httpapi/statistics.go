@@ -7,10 +7,16 @@ import (
 )
 
 type StatisticsRecorder interface {
+	// Record increments the hit count for the given fizzbuzz.Config.
 	Record(config fizzbuzz.Config)
+	// MostFrequent returns the fizzbuzz.Config with the highest hit count, the number of hits, and a boolean indicating if any records exist.
 	MostFrequent() (fizzbuzz.Config, int, bool)
 }
 
+// Here we define an in-memory implementation of the StatisticsRecorder interface.
+// In case of multiple instances of the API running, the data will not be shared across instances.
+// Then a persitence layer like a database would be needed to share the statistics across instances
+// And another implementation of the StatisticsRecorder interface would be needed to use that persistence layer.
 type InMemoryStatisticsRecorder struct {
 	mu   sync.RWMutex
 	hits map[fizzbuzz.Config]int
