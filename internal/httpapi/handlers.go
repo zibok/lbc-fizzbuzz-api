@@ -42,11 +42,11 @@ type errorResponse struct {
 	Error string `json:"error"`
 }
 
-func (api API) health(w http.ResponseWriter, r *http.Request) {
+func (api *API) health(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, healthResponse{Status: "ok"})
 }
 
-func (api API) fizzbuzz(w http.ResponseWriter, r *http.Request) {
+func (api *API) fizzbuzz(w http.ResponseWriter, r *http.Request) {
 	config := fizzbuzz.Config{
 		Limit:        100,
 		FirstModulo:  3,
@@ -104,7 +104,7 @@ func writeJSON(w http.ResponseWriter, status int, body any) {
 	_ = json.NewEncoder(w).Encode(body)
 }
 
-func (api API) statistics(w http.ResponseWriter, r *http.Request) {
+func (api *API) statistics(w http.ResponseWriter, r *http.Request) {
 	config, hits, found := api.statisticsRecorder.MostFrequent()
 	if !found {
 		writeJSON(w, http.StatusOK, statisticsResponse{Hits: 0})
